@@ -1,0 +1,145 @@
+# CreatedBy   : Harish Raj
+# CreatedTime : 09/01/2023
+# Description : This file contains Docker compose to up baas application
+
+version: '3.8'
+
+services:
+  baasappstorewebclient:
+    image: 10.104.4.52:3001/dev/baasappstorewebclient-image:latest
+    ports:
+      - "3000:3000"
+    container_name: baasappstorewebclient-container
+    networks:
+      - nginx-proxy-manager_dev-network
+    deploy:
+      resources:
+        limits:
+          memory: 240M
+        reservations:
+          memory: 120M
+
+  baasauthgateway:
+    image: 10.104.4.52:3001/dev/baasauthgateway-image:latest
+    ports:
+      - "4003:4003"
+    container_name: baasauthgateway-container
+    networks:
+      - nginx-proxy-manager_dev-network
+    deploy:
+      resources:
+        limits:
+          memory: 240M
+        reservations:
+          memory: 120M
+
+  baasauthrestbusiness:
+    image: 10.104.4.52:3001/dev/baasauthrestbusiness-image:latest
+    ports:
+      - "5001:5001"
+    container_name: baasauthrestbusiness-container
+    networks:
+      - nginx-proxy-manager_dev-network
+    deploy:
+      resources:
+        limits:
+          memory: 240M
+        reservations:
+          memory: 120M
+
+  baasappstorerestbusiness:
+    image: 10.104.4.52:3001/dev/baasappstorerestbusiness-image:latest
+    ports:
+      - "5003:5003"
+    container_name: baasappstorerestbusiness-container
+    networks:
+      - nginx-proxy-manager_dev-network
+    deploy:
+      resources:
+        limits:
+          memory: 240M
+        reservations:
+          memory: 120M
+
+  platformgateway:
+    image: 10.104.4.52:3001/dev/platformgateway-image:latest
+    ports:
+      - "4000:4000"
+    container_name: platformgateway-container
+    networks:
+      - nginx-proxy-manager_dev-network
+    deploy:
+      resources:
+        limits:
+          memory: 240M
+        reservations:
+          memory: 120M
+
+  platformrestdataaccess:
+    image: 10.104.4.52:3001/dev/platformrestdataaccess-image:latest
+    ports:
+      - "6000:6000"
+    container_name: platformrestdataaccess-container
+    networks:
+      - nginx-proxy-manager_dev-network
+    deploy:
+      resources:
+        limits:
+          memory: 240M
+        reservations:
+          memory: 120M
+
+  baasappstoregateway:
+    image: 10.104.4.52:3001/dev/baasappstoregateway-image:latest
+    ports:
+      - "4001:4001"
+    container_name: baasappstoregateway-container
+    networks:
+      - nginx-proxy-manager_dev-network
+    deploy:
+      resources:
+        limits:
+          memory: 240M
+        reservations:
+          memory: 120M
+  
+  platformrestbusiness:
+    image: 10.104.4.52:3001/dev/platformrestbusiness-image:latest
+    ports:
+      - "5002:5002"
+    container_name: platformrestbusiness-container
+    networks:
+      - nginx-proxy-manager_dev-network
+    deploy:
+      resources:
+        limits:
+          memory: 240M
+        reservations:
+          memory: 120M
+
+  # postgres:
+  #   image: postgres:latest
+  #   ports:
+  #     - "7000:5432"
+  #   container_name: my-unique-postgres-container
+  #   networks:
+  #     - nginx-proxy-manager_dev-network
+  #   volumes:
+  #     - postgres-data:/var/lib/postgresql/data
+  #   environment:
+  #     POSTGRES_DB: your-database-name
+  #     POSTGRES_USER: your-database-user
+  #     POSTGRES_PASSWORD: your-database-password
+  #   deploy:
+  #     resources:
+  #       limits:
+  #         memory: 240M
+  #       reservations:
+  #         memory: 120M
+
+networks:
+  nginx-proxy-manager_dev-network:
+    driver: bridge
+
+# volumes:
+#   postgres-data:

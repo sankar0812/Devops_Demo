@@ -1,0 +1,135 @@
+// CreatedBy     : Harish Raj
+// CreatedTime   : 15 Feb 2023
+// ModifiedBy    : Harish Raj
+// ModifiedTime  : 15 Feb 2023
+// Description   : This file contains all the instruction for jenkins pipeline
+
+
+// Pipeline configurations
+def CONFIG_REPO_NAME = "BAAS-PLATFORM-CONFIG"
+def CONFIG_REPO_BRANCH = "techops-sonar"
+def CONFIG_REPO_FOLDER = "PLATFORM-REST-BUSINESS"
+def CONFIG_REPO_URL = "https://sankara.subramanian:3aqn6ibub7babzmyv3xeo2sbgcnd2mwfdx4h5ytlhoafrbo5pa7q@dev.azure.com/goveindia/Baas-360/_git/BAAS-PLATFORM-CONFIG"
+
+// Email configurations
+def EMAIL_CONFIG_REPO_URL = "https://sankara.subramanian:ydp6hbkwl4jww7ftypqpipaltyaozzuzz5wnrb43hnvakmmvttoa@dev.azure.com/goveindia/Baas-360/_git/BAAS-EMAIL-CONFIG"
+def EMAIL_CONFIG_REPO_NAME = "BAAS-EMAIL-CONFIG"
+def EMAIL_CONFIG_REPO_FOLDER = "DEV_EMAIL-CONFIG-REPO-FOLDER"
+def EMAIL_CONFIG_REPO_BRANCH = "develop"
+
+
+pipeline {
+    agent { label "test" }
+    stages {
+        stage('CLONE CONFIG REPOSITORY') {
+            steps {
+                script{
+                    catchError {
+                        sh "git clone --recurse-submodules ${CONFIG_REPO_URL} -b ${CONFIG_REPO_BRANCH}"
+                        sh "git clone --recurse-submodules ${EMAIL_CONFIG_REPO_URL} -b ${EMAIL_CONFIG_REPO_BRANCH}"
+                    }
+                }
+            }
+        }
+        stage('SETTING UP ALL THE CONFIGURATIONS') {
+            steps {
+                script {
+                        def sourcePath = sh(script: 'pwd', returnStdout: true).trim()
+                        def targetPath = sh(script: 'pwd', returnStdout: true).trim()
+                        sh "rm -rf ${sourcePath}/package-lock.json"
+                        sh "cp -r ${sourcePath}/${CONFIG_REPO_NAME}/${CONFIG_REPO_FOLDER}/package.json ${targetPath}"
+                        sh "cp -r ${sourcePath}/${CONFIG_REPO_NAME}/${CONFIG_REPO_FOLDER}/test.report.email.sh ${targetPath}"
+                        sh "cp -r ${sourcePath}/${CONFIG_REPO_NAME}/${CONFIG_REPO_FOLDER}/.npmrc ${targetPath}"
+                        sh "cp -r ${sourcePath}/${CONFIG_REPO_NAME}/${CONFIG_REPO_FOLDER}/Dockerfile ${targetPath}"
+                        sh "cp -r ${sourcePath}/${CONFIG_REPO_NAME}/${CONFIG_REPO_FOLDER}/config.js ${targetPath}"
+                        sh "cp -r ${sourcePath}/${CONFIG_REPO_NAME}/${CONFIG_REPO_FOLDER}/sonar-project.properties ${targetPath}"
+                        sh "rm -rf ${sourcePath}/${CONFIG_REPO_NAME}"
+                }
+            }
+        }
+        stage('SETTING UP ALL THE EMAIL CONFIGURATIONS') {
+            steps {
+                script {
+                        def sourcePath = sh(script: 'pwd', returnStdout: true).trim()
+                        def targetPath = sh(script: 'pwd', returnStdout: true).trim()
+                        sh "cp -r ${sourcePath}/${EMAIL_CONFIG_REPO_NAME}/${EMAIL_CONFIG_REPO_FOLDER}/post.deployment.email.sh ${targetPath}"
+                        sh "cp -r ${sourcePath}/${EMAIL_CONFIG_REPO_NAME}/${EMAIL_CONFIG_REPO_FOLDER}/pre.deployment.email.sh ${targetPath}"
+                        sh "rm -rf ${sourcePath}/${EMAIL_CONFIG_REPO_NAME}"
+                }
+            }
+        }
+         stage('PRE-DEPLOYMENT EMAIL') {
+            steps {
+                script {
+                    sh 'chmod +x pre.deployment.email.sh'
+                     sh './pre.deployment.email.sh'
+                }
+            }
+        }
+        stage('STOPPING THE CURRENTLY RUNNING CONTAINER') {
+            steps {
+                script{
+                    catchError {
+                        sh 'echo admin | sudo -S docker stop platformrestbusiness-container'
+                    }
+                }
+            }
+        }
+        stage('DELETING THE STOPPED CONTAINER') {
+            steps{
+                script{
+                    catchError {
+                        sh 'echo admin | sudo -S docker rm platformrestbusiness-container'
+                    }
+                }
+            }
+        }
+        stage('DELETING THE IMAGE OF THE CONTAINER') {
+            steps{
+                script{
+                    catchError {
+                        sh 'echo admin | sudo -S docker rmi platformrestbusiness-image'
+                    }
+                }
+            }
+        }
+       stage('BUILDING A NEW IMAGE FROM SOURCE CODE') {
+            steps{
+                script{
+                    catchError{
+                        sh 'echo admin | sudo -S docker build -t platformrestbusiness-image .' 
+                    }
+                 }
+            }
+        }
+
+        /* stage('SonarQube Analysis') {
+            steps{
+                script{
+                    def scannerHome = tool 'SonarScanner'
+                    withSonarQubeEnv() {
+                        sh "${scannerHome}/bin/sonar-scanner"
+                    }
+                }
+            }
+        } */
+
+        stage('RUNNING A NEW CONATINER FROM NEW IMAGE') {
+            steps{
+                script{
+                    catchError{
+                        sh 'echo admin | sudo -S docker run --memory-reservation=120m -m 240m -d -p 5002:5002 --net nginx-proxy-manager_dev-network --name platformrestbusiness-container platformrestbusiness-image'
+                    }
+                }
+            }
+        }
+        stage('POST-DEPLOYMENT EMAIL') {
+            steps{
+                script{
+                   sh 'chmod +x post.deployment.email.sh'
+                     sh './post.deployment.email.sh'
+                }
+            }
+        }
+    }
+}
