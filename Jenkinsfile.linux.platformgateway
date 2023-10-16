@@ -125,7 +125,7 @@ pipeline {
                     def buildNumber = currentBuild.number
 
                     // Construct the Harbor artifact URL for the previous image tag
-                    def harborArtifactUrl = "${HARBOR_URL}/projects/${HARBOR_PROJECT}/repositories/${HARBOR_REPOSITORY}/artifacts/${currentBuild.number}/latest"
+                    def harborArtifactUrl = "${HARBOR_URL}/projects/${HARBOR_PROJECT}/repositories/${HARBOR_REPOSITORY}/artifacts/latest"
                     echo "Deleting artifact from Harbor URL: ${harborArtifactUrl}"
 
                     catchError {
