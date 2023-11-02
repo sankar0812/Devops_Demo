@@ -59,7 +59,7 @@ pipeline {
                         sh './pre.deployment.email.sh'
                     }
                 }
-            }
+        }
         stage('STOPPING THE CURRENTLY RUNNING CONTAINER') {
             steps {
                 script{
@@ -171,7 +171,7 @@ pipeline {
                 }
             }
         }
-		stage('pull Image') {
+	stage('pull Image') {
             steps {
                 script {
                     sh "echo admin | sudo -S docker login -u ${DOCKER_USERNAME} -p ${DOCKER_PASSWORD} ${DOCKER_REGISTRY}"
@@ -179,7 +179,7 @@ pipeline {
                 }
             }
         }
-	    stage('RUNNING A NEW CONATINER FROM NEW IMAGE') {
+	stage('RUNNING A NEW CONATINER FROM NEW IMAGE') {
             steps{
                 script{
                     catchError{
